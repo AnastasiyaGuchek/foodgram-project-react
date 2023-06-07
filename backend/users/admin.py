@@ -7,7 +7,7 @@ from .models import Subscribe, User
 class UserAdmin(admin.ModelAdmin):
     """Кастомизация админ панели - управление пользователями."""
     list_display = ('id', 'email', 'username', 'first_name', 'last_name',
-                    'password', 'role')
+                    'password')
     list_filter = ('username', 'email')
 
 

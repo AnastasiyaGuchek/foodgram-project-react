@@ -1,28 +1,21 @@
-from pathlib import Path
-from dotenv import load_dotenv
 import os
+from pathlib import Path
 
+from dotenv import load_dotenv
 
 load_dotenv()
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+SECRET_KEY = os.getenv('SECRET_KEY', default='django-insecure-7)ohr8i35dz1$b0^-9k%$f3rcny+59&)*sb$3@db=w3m&vj^l5')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7)ohr8i35dz1$b0^-9k%$f3rcny+59&)*sb$3@db=w3m&vj^l5'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = []
+
 ALLOWED_HOSTS = ['84.201.138.18', '127.0.0.1', 'localhost']
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -72,9 +65,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 """
 DATABASES = {
     'default': {
@@ -94,7 +84,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT')
     }
 }
-
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -124,8 +113,6 @@ DJOSER = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -143,20 +130,16 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -164,16 +147,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-USERS_MAX_LENGHT = 150
-EMAIL_MAX_LENGHT = 254
-RECIPES_MAX_LENGHT = 200
-UNIT_MAX_LENGHT = 100
-COLOR_MAX_LENGHT = 7
+USERS_MAX_LENGTH = 150
+EMAIL_MAX_LENGTH = 254
+RECIPES_MAX_LENGTH = 200
+UNIT_MAX_LENGTH = 100
+COLOR_MAX_LENGTH = 7
 PAGE_SIZE = 6
-ROLE_MAX_LENGHT = 10
-TAG_MAX_LENGHT = 50
+ROLE_MAX_LENGTH = 10
+TAG_MAX_LENGTH = 50

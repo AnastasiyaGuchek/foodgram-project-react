@@ -10,12 +10,12 @@ class Ingredient(models.Model):
     '''Модель ингридиентов.'''
     name = models.CharField(
         verbose_name='Наименование ингредиента',
-        max_length=settings.RECIPES_MAX_LENGHT,
+        max_length=settings.RECIPES_MAX_LENGTH,
         blank=False,
     )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=settings.UNIT_MAX_LENGHT,
+        max_length=settings.UNIT_MAX_LENGTH,
         blank=False,
     )
 
@@ -33,7 +33,7 @@ class Tag(models.Model):
     name = models.CharField(
         verbose_name='Тег',
         unique=True,
-        max_length=settings.TAG_MAX_LENGHT
+        max_length=settings.TAG_MAX_LENGTH
     )
     slug = models.SlugField(
         verbose_name='Уникальный слаг',
@@ -41,7 +41,7 @@ class Tag(models.Model):
     )
     color = models.CharField(
         verbose_name='Цвет',
-        max_length=settings.COLOR_MAX_LENGHT,
+        max_length=settings.COLOR_MAX_LENGTH,
         validators=[
             RegexValidator(
                 regex='^#([a-fA-F0-9]{6})',
@@ -69,7 +69,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         verbose_name='Название блюда',
-        max_length=settings.RECIPES_MAX_LENGHT
+        max_length=settings.RECIPES_MAX_LENGTH
     )
     image = models.ImageField(
         verbose_name='Картинка',
@@ -77,7 +77,7 @@ class Recipe(models.Model):
     )
     text = models.TextField(
         verbose_name='Описание рецепта',
-        max_length=settings.RECIPES_MAX_LENGHT,
+        max_length=settings.RECIPES_MAX_LENGTH,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -90,7 +90,7 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Теги',
     )
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления в минутах',
         validators=[
             MinValueValidator(
@@ -169,7 +169,8 @@ class Favorite(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user.username} добавил {self.recipe.name} в список избранных'
+        return (f'{self.user.username} добавил '
+                f'{self.recipe.name} в список избранных')
 
 
 class ShoppingCart(models.Model):
@@ -196,4 +197,5 @@ class ShoppingCart(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user.username} добавил {self.recipe.name} в список покупок'
+        return (f'{self.user.username} добавил '
+                f'{self.recipe.name} в список покупок')
