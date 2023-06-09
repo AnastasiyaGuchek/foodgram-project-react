@@ -1,7 +1,9 @@
 version: '3.8'
 services:   
   db:    
-    image: postgres:13.0-alpine    
+    image: postgres:13.0-
+    environment:
+      POSTGRES_PASSWORD: postgres_password   
     volumes:
       - db_value:/var/lib/postgresql/data/    
     env_file:
