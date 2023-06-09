@@ -205,7 +205,7 @@ class RecipeViewSet(ModelViewSet):
         if not user.shopping_cart.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
         ingredients = IngredientInRecipe.objects.filter(
-            recipe__shopping_cart__user=request.user
+            recipes__shopping_cart__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
