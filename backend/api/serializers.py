@@ -52,10 +52,10 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        return user.is_authenticated and user.subscriber.filter(
+        return user.is_authenticated and user.follower.filter(
             user=user, author=obj
         ).exists()
-    
+
 
 class SetPasswordSerializer(serializers.Serializer):
     """Сериализатор для смены пароля."""
