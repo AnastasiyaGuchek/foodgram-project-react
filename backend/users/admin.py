@@ -4,6 +4,12 @@ from django.contrib.auth.admin import UserAdmin
 from .models import Subscribe, User
 
 
+class BaseAdminSettings(admin.ModelAdmin):
+    """Базовая кастомизация админ панели."""
+    empty_value_display = '-пусто-'
+    list_filter = ('email', 'username')
+
+
 @admin.register(User)
 class UserAdmin(UserAdmin):
     """Кастомизация админ панели - управление пользователями."""

@@ -85,7 +85,6 @@ DATABASES = {
     }
 }
 
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -104,15 +103,10 @@ DJOSER = {
     },
     'HIDE_USERS': False,
     'PERMISSIONS': {
-        'user': [
-            'rest_framework.permissions.IsAuthenticatedOrReadOnly'
-        ],
-        'user_list': [
-            'rest_framework.permissions.IsAuthenticatedOrReadOnly'
-        ],
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
 }
-
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -131,7 +125,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-
 LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'Europe/Moscow'
@@ -141,12 +134,11 @@ USE_I18N = True
 USE_TZ = True
 
 
-
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

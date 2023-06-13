@@ -4,29 +4,28 @@ from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingCart, Tag)
 
 
-class RecipeIngredientInline(admin.TabularInline):
-    """Встроенный класс для отображения модели IngredientInRecipe."""
-    model = IngredientInRecipe
-    extra = 1
+class BaseAdminSettings(admin.ModelAdmin):
+    """Базовая кастомизация админ панели."""
+    empty_value_display = '-пусто-'
+    list_filter = ('author', 'name', 'tags')
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Кастомизация админ панели - данные про рецепты."""
-    inlines = (RecipeIngredientInline, )
     list_display = (
         'id',
         'name',
         'author',
-        'in_favorites',
+        'added_in_favorites',
         'pub_date',
     )
     list_filter = ('name', 'author', 'tags',)
     search_fields = ['name']
 
     @admin.display(description='В избранном')
-    def in_favorites(self, obj):
-        return Favorite.objects.filter(recipe=obj).count()
+    def added_in_favorites(self, obj):
+        return obj.favorites.all().count()
 
 
 @admin.register(Tag)
@@ -54,9 +53,9 @@ class IngredientAdmin(admin.ModelAdmin):
 @admin.register(IngredientInRecipe)
 class IngredientInRecipeAdmin(admin.ModelAdmin):
     """Кастомизация админ панели - данные про ингредиенты в рецептах."""
-    list_display = ('recipe', 'ingredient', 'amount')
-    search_fields = ['recipe', 'ingredient']
-    list_filter = ('recipe', 'ingredient')
+    list_display = ('ingredient', 'amount')
+    search_fields = ['ingredient']
+    list_filter = ('ingredient',)
 
 
 @admin.register(Favorite)

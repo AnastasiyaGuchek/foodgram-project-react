@@ -1,51 +1,44 @@
-import django_filters
+from django.contrib.auth import get_user_model
+from django_filters.rest_framework import FilterSet, filters
 
 from recipes.models import Ingredient, Recipe, Tag
 
+User = get_user_model()
 
-class IngredientFilter(django_filters.FilterSet):
+
+class IngredientFilter(FilterSet):
     """Фильтр для ингредиентов."""
-    name = django_filters.CharFilter(lookup_expr='startswith')
+    name = filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
         model = Ingredient
         fields = ('name',)
 
 
-class RecipeFilter(django_filters.FilterSet):
+class RecipeFilter(FilterSet):
     """Фильтр для рецептов."""
-    tags = django_filters.ModelMultipleChoiceFilter(
+    tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all(),
     )
-    author = django_filters.ModelMultipleChoiceFilter(
-        queryset=Recipe.objects.all(),
-        field_name='author__id',
-        to_field_name='id',
-    )
-    is_favorited = django_filters.BooleanFilter(method='filter_is_favorited')
-    is_in_shopping_cart = django_filters.BooleanFilter(
+
+    is_favorited = filters.BooleanFilter(method='filter_is_favorited')
+    is_in_shopping_cart = filters.BooleanFilter(
         method='filter_is_in_shopping_cart')
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
+        fields = ('tags', 'author',)
 
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
-        if value and user.is_authenticated:
-            return queryset.filter(
-                favorite__user=user,
-                is_favorited=True,
-            )
-        return Recipe.objects.all()
+        if value and not user.is_anonymous:
+            return queryset.filter(favorites__user=user)
+        return queryset
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
-        if value and user.is_authenticated:
-            return queryset.filter(
-                shopping_cart__user=user,
-                is_in_shopping_cart=True,
-            )
-        return Recipe.objects.all()
+        if value and not user.is_anonymous:
+            return queryset.filter(shopping_cart__user=user)
+        return queryset
