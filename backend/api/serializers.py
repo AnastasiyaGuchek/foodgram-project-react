@@ -215,6 +215,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
+    """Сериализатор для создания ингредиентов в рецепте."""
     id = IntegerField(write_only=True)
     amount = IntegerField(required=True)
     name = SerializerMethodField()
