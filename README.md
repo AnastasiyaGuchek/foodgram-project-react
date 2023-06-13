@@ -41,7 +41,6 @@ python manage.py migrate
 python manage.py collectstatic --no-input
 python manage.py createsuperuser
 python manage.py load_ingredients
-python manage.py load_tags
 ```
 
 ## Автор в рамках учебного курса ЯП Python - разработчик бекенда:
