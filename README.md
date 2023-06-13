@@ -1,7 +1,7 @@
 ![Foodgram-project-react Workflow Status](https://github.com/AnastasiyaGuchek/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 
 Проект доступен по адресу 
-http://guchek.84.201.138.18/admin/
+http://84.201.138.18/admin/
 
 
 ### Проект Foodgram
