@@ -5,9 +5,9 @@ from django.db import models
 
 class User(AbstractUser):
     """Модель пользователей."""
-    
-    USERNAME_FIELD = 'email' 
-    REQUIRED_FIELDS = ['username',]
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', ]
 
     username = models.CharField(
         verbose_name='Уникальный юзернейм',
