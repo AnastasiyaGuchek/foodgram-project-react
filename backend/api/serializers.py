@@ -49,12 +49,11 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
         )
 
-    def get_is_subscribed(self, obj):
-        return (self.context.get('request').user.is_authenticated
-                and Subscribe.objects.filter(
-                    user=self.context.get('request').user,
-                    author=obj
-        ).exists())
+    def get_is_subscribed(self, author):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(user=user, author=author).exists()
 
 
 class SetPasswordSerializer(serializers.Serializer):
