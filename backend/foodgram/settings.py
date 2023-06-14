@@ -45,6 +45,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'foodgram.urls'
+
 AUTH_USER_MODEL = 'users.User'
 
 TEMPLATES = [
