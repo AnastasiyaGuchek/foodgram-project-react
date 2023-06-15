@@ -1,19 +1,16 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.core import exceptions, validators
+from django.core import exceptions
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers, validators
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, ReadOnlyField
 
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
-from users.models import Subscribe
-
-User = get_user_model()
+from users.models import Subscribe, User
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -37,7 +34,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         )
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра профиля пользователя."""
     is_subscribed = SerializerMethodField()
 
@@ -52,10 +49,11 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
         )
 
-    def get_is_subscribed(self, obj):
+    def get_is_subscribed(self, author):
         user = self.context.get('request').user
-        return (user.is_authenticated
-                and Subscribe.objects.filter(user=user, author=obj).exists())
+        if user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(user=user, author=author).exists()
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -94,48 +92,31 @@ class SetPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class SubscribeSerializer(UserSerializer):
+class SubscribeSerializer(CustomUserSerializer):
     """Сериализатор для подписки на автора рецептов."""
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + (
-            'recipes_count', 'recipes'
-        )
-
-    def get_recipes_count(self, author):
-        return author.recipes.count()
-
-    def get_recipes(self, author):
-        request = self.context.get('request')
-        limit = request.GET.get('recipes_limit')
-        recipes = author.recipes.all()
-        if limit:
-            recipes = recipes[:int(limit)]
-        serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
-        return serializer.data
-
-
-class FollowSerializer(serializers.ModelSerializer):
-
     class Meta:
-        model = Subscribe
-        fields = ('user', 'author')
-        validators = (
-            validators.UniqueTogetherValidator(
-                queryset=Subscribe.objects.all(),
-                fields=('user', 'author'),
-                message='Вы уже подписаны на этого пользователя',
-            ),
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count',
         )
+        depth = 1
 
-    def validate_following(self, value):
-        if value == self.context.get('request').user:
-            raise serializers.ValidationError(
-                'Пользователь не может подписаться на себя.')
-        return value
+    def get_recipes(self, obj):
+        recipes_limit = self.context['request'].GET.get('recipes_limit')
+        if recipes_limit:
+            recipes = obj.recipes.all()[:int(recipes_limit)]
+        else:
+            recipes = obj.recipes.all()
+        return RecipeShortSerializer(
+            recipes, many=True, read_only=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
