@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, ReadOnlyField
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from users.models import Subscribe
@@ -52,11 +53,14 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
         )
 
-    def get_is_subscribed(self, author):
-        user = self.context.get('request').user
-        if user.is_anonymous:
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
             return False
-        return Subscribe.objects.filter(user=user, author=author).exists()
+        return Subscribe.objects.filter(
+            user=request.user,
+            author=obj
+        ).exists()
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -95,11 +99,12 @@ class SetPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class SubscribeSerializer(UserSerializer):
+class SubscribeSerializer(ModelSerializer):
     """Сериализатор для подписки на автора рецептов."""
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+    is_subscribed = SerializerMethodField()
 
     class Meta:
         model = User
@@ -107,19 +112,55 @@ class SubscribeSerializer(UserSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count',
         )
-        depth = 1
-
-    def get_recipes(self, obj):
-        recipes_limit = self.context['request'].GET.get('recipes_limit')
-        if recipes_limit:
-            recipes = obj.recipes.all()[:int(recipes_limit)]
-        else:
-            recipes = obj.recipes.all()
-        return RecipeShortSerializer(
-            recipes, many=True, read_only=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = request.GET.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        serializer = RecipeShortSerializer(
+            recipes,
+            many=True,
+            read_only=True
+        )
+        return serializer.data
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(
+            user=request.user,
+            author=obj
+        ).exists()
+
+    def validate(self, data):
+        user = self.context.get('request').user
+        author = self.instance
+        if user == author:
+            raise ValidationError(
+                detail='Пользователь не может подписаться сам на себя',
+                code=HTTP_400_BAD_REQUEST
+            )
+        if Subscribe.objects.filter(
+            user=user,
+            author=author
+        ).exists():
+            raise ValidationError(
+                detail=('Пользователь не может подписаться '
+                        'на другого пользователя дважды'),
+                code=HTTP_400_BAD_REQUEST
+            )
+        return data
+
+    def create(self, validated_data):
+        user = self.context.get('request').user
+        author = validated_data.get('author')
+        return Subscribe.objects.create(user=user, author=author)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
