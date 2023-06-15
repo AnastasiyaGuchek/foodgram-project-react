@@ -45,5 +45,5 @@ class CustomUserViewSet(UserViewSet):
                 context={'request': request},
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        self.get_object().author.filter(user=request.user).delete()
+        self.get_object().following.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
