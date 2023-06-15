@@ -115,7 +115,7 @@ class SubscribeListSerializer(ModelSerializer):
         return RecipeShortSerializer(recipes, many=True).data
 
 
-class FollowSerializer(serializers.ModelSerializer):
+class SubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор для подписки на автора рецепта."""
 
     class Meta:
