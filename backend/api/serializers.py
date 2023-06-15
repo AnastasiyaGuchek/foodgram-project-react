@@ -1,16 +1,19 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions, validators
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
+from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, ReadOnlyField
 
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
-from users.models import Subscribe, User
+from users.models import Subscribe
+
+User = get_user_model()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -36,7 +39,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 class CustomUserSerializer(UserSerializer):
     """Сериализатор для просмотра профиля пользователя."""
-    is_subscribed = SerializerMethodField(read_only=True)
+    is_subscribed = SerializerMethodField()
 
     class Meta:
         model = User
@@ -49,11 +52,10 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
         )
 
-    def get_is_subscribed(self, author):
+    def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscribe.objects.filter(user=user, author=author).exists()
+        return (user.is_authenticated
+                and Subscribe.objects.filter(user=user, author=obj).exists())
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -92,7 +94,7 @@ class SetPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class SubscribeSerializer(CustomUserSerializer):
+class SubscribeSerializer(UserSerializer):
     """Сериализатор для подписки на автора рецептов."""
 
     recipes = serializers.SerializerMethodField()
@@ -128,6 +130,12 @@ class FollowSerializer(serializers.ModelSerializer):
                 message='Вы уже подписаны на этого пользователя',
             ),
         )
+
+    def validate_following(self, value):
+        if value == self.context.get('request').user:
+            raise serializers.ValidationError(
+                'Пользователь не может подписаться на себя.')
+        return value
 
 
 class IngredientSerializer(serializers.ModelSerializer):

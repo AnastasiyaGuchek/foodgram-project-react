@@ -1,10 +1,10 @@
 from api.pagination import CustomPagination
-from api.serializers import (CustomUserSerializer, FollowSerializer,
-                             SubscribeSerializer)
+from api.serializers import FollowSerializer, SubscribeSerializer
 from django.contrib.auth import get_user_model
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 User = get_user_model()
@@ -12,11 +12,26 @@ User = get_user_model()
 
 class CustomUserViewSet(UserViewSet):
     """Вьюсет для кастомной модели пользователя."""
-    queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = SubscribeSerializer
     pagination_class = CustomPagination
 
-    @action(['POST', 'DELETE'], detail=True)
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def subscriptions(self, request):
+        queryset = self.get_queryset().filter(following__user=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        permission_classes=[IsAuthenticated]
+    )
     def subscribe(self, request, id):
         if request.method == 'POST':
             serializer = FollowSerializer(
