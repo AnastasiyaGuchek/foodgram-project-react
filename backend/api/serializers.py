@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
 from django.shortcuts import get_object_or_404
@@ -10,7 +11,9 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, ReadOnlyField
 
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
-from users.models import Subscribe, User
+from users.models import Subscribe
+
+User = get_user_model()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
