@@ -18,7 +18,7 @@ class CustomUserViewSet(UserViewSet):
 
     @action(['GET'], detail=False)
     def subscriptions(self, request):
-        queryset = self.get_queryset().filter(author__user=request.user)
+        queryset = self.get_queryset().filter(following__user=request.user)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(
