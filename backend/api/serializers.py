@@ -116,7 +116,7 @@ class SubscribeListSerializer(ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    """Сериализатор для подписки на автора."""
+    """Сериализатор для подписки на автора рецепта."""
 
     class Meta:
         model = Subscribe
