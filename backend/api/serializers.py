@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -92,7 +92,7 @@ class SetPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class SubscribeSerializer(serializers.UserSerializer):
+class SubscribeSerializer(UserSerializer):
     """Сериализатор для подписки на автора рецептов."""
 
     recipes = serializers.SerializerMethodField()
