@@ -92,7 +92,7 @@ class SetPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class SubscribeSerializer(CustomUserSerializer):
+class SubscribeSerializer(serializers.UserSerializer):
     """Сериализатор для подписки на автора рецептов."""
 
     recipes = serializers.SerializerMethodField()
