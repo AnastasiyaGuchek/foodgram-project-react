@@ -1,58 +1,49 @@
 from api.pagination import CustomPagination
-from api.serializers import CustomUserSerializer, SubscribeSerializer
+from api.serializers import SubscribeListSerializer, SubscribeSerializer
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Subscribe
-
 User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
     """Вьюсет для кастомной модели пользователя."""
-    queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
+    permission_classes = (IsAuthenticated,)
     pagination_class = CustomPagination
+    serializer_class = SubscribeListSerializer
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
-    def subscribe(self, request, **kwargs):
-        """Метод для подписки/отписки от автора."""
-        user = request.user
-        author_id = self.kwargs.get('id')
-        author = get_object_or_404(User, id=author_id)
-        if request.method == 'POST':
-            serializer = SubscribeSerializer(author,
-                                             data=request.data,
-                                             context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscribe,
-                                             user=user,
-                                             author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated]
-    )
+    @action(['GET'], detail=False)
     def subscriptions(self, request):
-        """Метод для просмотра подписок на авторов."""
-        user = request.user
-        queryset = User.objects.filter(following__user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(pages,
-                                         many=True,
-                                         context={'request': request})
-        return self.get_paginated_response(serializer.data)
+        queryset = self.get_queryset().filter(author__user=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(['POST', 'DELETE'], detail=True)
+    def subscribe(self, request, id):
+        if request.method == 'POST':
+            serializer = SubscribeSerializer(
+                data={
+                    'user': request.user.id,
+                    'author': self.get_object().id,
+                },
+                context={'request': request},
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer = SubscribeListSerializer(
+                self.get_object(),
+                context={'request': request},
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        self.get_object().author.filter(user=request.user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
