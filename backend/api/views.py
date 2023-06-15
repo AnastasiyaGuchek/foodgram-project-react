@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
@@ -19,8 +19,6 @@ from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           TagSerializer)
 from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                             ShoppingCart, Tag)
-
-User = get_user_model()
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -48,7 +46,6 @@ class RecipeViewSet(ModelViewSet):
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    serializer_class = RecipeReadSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -80,24 +77,24 @@ class RecipeViewSet(ModelViewSet):
             return self.add_to(ShoppingCart, request.user, pk)
         return self.delete_from(ShoppingCart, request.user, pk)
 
-    def add_to_list(self, request):
-        if request.method == 'POST':
-            serializer = self.get_serializer(
-                data={
-                    'user': request.user.id,
-                    'recipe': self.get_object().id,
-                },
-                context={'request': request},
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            serializer = RecipeShortSerializer(
-                self.get_object(),
-                context={'request': request},
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        self.get_related_queryset().filter(user=request.user).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def add_to(self, model, user, pk):
+        """Метод для добавления."""
+        if model.objects.filter(user=user, recipe__id=pk).exists():
+            return Response({'errors': 'Рецепт уже добавлен!'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        recipe = get_object_or_404(Recipe, id=pk)
+        model.objects.create(user=user, recipe=recipe)
+        serializer = RecipeShortSerializer(recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete_from(self, model, user, pk):
+        """Метод для удаления."""
+        obj = model.objects.filter(user=user, recipe__id=pk)
+        if obj.exists():
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'errors': 'Рецепт уже удален!'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
